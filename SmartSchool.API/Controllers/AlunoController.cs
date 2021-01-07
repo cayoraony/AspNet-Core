@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SmartSchool.API.Data;
+using SmartSchool.API.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,36 +15,84 @@ namespace SmartSchool.API.Controllers
     [ApiController]
     public class AlunoController : ControllerBase
     {
+
+        
+        private readonly IRepository _repo;
+        public AlunoController(IRepository repo)
+        {
+            _repo = repo;
+        }
+
         // GET: api/<AlunoController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            var result = _repo.GetAllAlunos(true);
+            return Ok(result);
         }
+
+
 
         // GET api/<AlunoController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult GetById(int id)
         {
-            return "Value: " + id;
+            var aluno = _repo.GetAllAlunosByDisciplinaId(id, false);
+            if (aluno == null) return BadRequest("Aluno não encontrado");
+            return Ok(aluno);
         }
+
+
+
 
         // POST api/<AlunoController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post(Aluno aluno)
         {
+            _repo.Add(aluno);
+            if (_repo.SaveChanges()) { return Ok(aluno); }
+            return BadRequest("Não deu certo.");
         }
+
+
+
 
         // PUT api/<AlunoController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Put(int id, Aluno aluno)
         {
+            var alu = _repo.GetAlunoById(id);
+            if (alu == null) return BadRequest("Aluno não encontrado");
+            _repo.Update(aluno);
+            if (_repo.SaveChanges()) { return Ok(aluno); }
+            return BadRequest("Não deu certo.");
         }
+
+
+
+
+        [HttpPatch("{id}")]
+        public IActionResult Patch(int id, Aluno aluno)
+        {
+            var alu = _repo.GetAlunoById(id);
+            if (alu == null) return BadRequest("Aluno não encontrado");
+            _repo.Update(aluno);
+            if (_repo.SaveChanges()) { return Ok(aluno); }
+            return BadRequest("Não deu certo.");
+        }
+
+
 
         // DELETE api/<AlunoController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            var aluno = _repo.GetAlunoById(id);
+            if (aluno == null) return BadRequest("Aluno não encontrado");
+
+            _repo.Delete(aluno);
+            if (_repo.SaveChanges()) { return Ok("Aluno deletado"); }
+            return BadRequest("Não deu para deletar.");
         }
     }
 }
